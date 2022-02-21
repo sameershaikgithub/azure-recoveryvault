@@ -1,5 +1,5 @@
 # azure-recoveryvault
-Terradorm code for Azure to build below components.
+Terraform code for Azure to build below components.
 1. Two Resource Groups in EASTUS2 & CentralUS
 2. VNET/Subnet/Public IP/DNS String
 3. Two storage Accounts, one in each region to be used as staging area for VM restores

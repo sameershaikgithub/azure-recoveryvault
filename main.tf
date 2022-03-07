@@ -55,6 +55,24 @@ resource "azurerm_subnet" "rv" {
  address_prefixes       = ["10.0.2.0/24"]
 }
 
+#VNET in Secondary region
+resource "azurerm_virtual_network" "rv-sec" {
+ name                = "rv-vnet-sec"
+ address_space       = ["10.0.0.0/16"]
+ location            = var.location-secondary
+ resource_group_name = azurerm_resource_group.rv-sec.name
+ tags                = var.tags
+}
+
+resource "azurerm_subnet" "rv-sec" {
+ name                 = "rv-subnet"
+ resource_group_name  = azurerm_resource_group.rv-sec.name
+ virtual_network_name = azurerm_virtual_network.rv-sec.name
+ address_prefixes       = ["10.0.2.0/24"]
+}
+
+#Public IP for VM1
+
 resource "azurerm_public_ip" "vm1" {
  name                         = "vm1-public-ip"
  location                     = var.location-primary
@@ -245,6 +263,7 @@ resource "azurerm_recovery_services_vault" "vault" {
     location = var.location-primary
     resource_group_name = var.resource_group_name_primary
     sku     = "Standard"
+    soft_delete_enabled = "false"
     depends_on = [azurerm_resource_group.rv]
 }
 
@@ -287,3 +306,18 @@ resource "azurerm_backup_protected_vm" "vm" {
   source_vm_id        = azurerm_virtual_machine.vm1.id
   backup_policy_id    = azurerm_backup_policy_vm.policy.id
 }
+
+#Create Backup Vault
+
+resource "azurerm_data_protection_backup_vault" "backupvault" {
+  name                = "backupvaulteastus2"
+  location = var.location-primary
+  resource_group_name = var.resource_group_name_primary
+  datastore_type      = "VaultStore"
+  redundancy          = "GeoRedundant"
+
+  identity {
+          type         = "SystemAssigned" 
+        }
+}
+
